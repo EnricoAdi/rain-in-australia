@@ -2,15 +2,17 @@ import os
 from flask import Flask, request, jsonify
 import pandas as pd
 import pickle
-pat = os.path.abspath('./tree_id3_rain_in_australia.pkl')
+from flask_cors import CORS
+pat = os.path.abspath('./backend/tree_id3_rain_in_australia.pkl')
 
 model_file = open(pat, 'rb')
 model = pickle.load(model_file)
 model_file.close()
 
 app = Flask(__name__)
-
+CORS(app)
 def dictWindDir(x):
+  # print(x)
   wind_direction_dict = {
     "W": 0, "WNW": 1, "WSW": 2, "NE": 3, "NNW": 4,
     "N": 5, "NNE": 6, "SW": 7, "ENE": 8, "SSE": 9, "S": 10,
@@ -28,7 +30,7 @@ def dictRainToday(x):
 
 @app.route("/", methods=['GET'])
 def index():
-  return "Hello, World!"
+  return "Hello, World!!"
 
 @app.route('/predict', methods=['GET'])
 def predict(): 
@@ -58,12 +60,15 @@ def predict():
   cbPredictData = [inputData]
 
   cbPredictHeader = ["MinTemp", "MaxTemp", "Rainfall", "WindGustDir", "WindGustSpeed", "WindDir9am","WindDir3pm","WindSpeed9am","WindSpeed3pm","Humidity9am","Humidity3pm","Pressure9am",
-            "Pressure3pm", "Cloud9am", "Cloud3pm", "Temp9am", "Temp3pm", "RainToday"]
+  "Pressure3pm", "Cloud9am", "Cloud3pm", "Temp9am", "Temp3pm", "RainToday"]
   xCobaPredict = pd.DataFrame(data = cbPredictData, columns = cbPredictHeader)
   yCobaPredict = model.predict(xCobaPredict)
   # print(xCobaPredict)
-  # print(yCobaPredict[0])
-  return jsonify({"prediction": yCobaPredict[0]})
+  prediction = yCobaPredict[0]
+  response = jsonify({"prediction": prediction})
+  # response.headers['Access-Control-Allow-Origin'] = '*'
+  print(prediction)
+  return response
 
 if __name__ == '__main__':
   app.run(debug=True)
